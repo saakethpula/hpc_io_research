@@ -1,0 +1,41 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+
+# Editor / IDE state
+.vscode/
+.vscode-server/
+.idea/
+*.swp
+*.swo
+
+# Cursor / tooling state
+.cursor/
+.cursor-server/
+
+# User shell/history files
+.bash_history
+.bashrc
+.profile
+.python_history
+.lesshst
+.ssh/
+.cache/
+
+# Logs and transient outputs
+*.log
+logs/
+tmp/
+/tmp/
+
+# Darshan raw logs (keep curated CSVs under version control)
+*.darshan
+darshan-logs/
+
