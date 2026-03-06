@@ -20,6 +20,9 @@ env/
 .cursor/
 .cursor-server/
 
+# .NET SDK / tooling
+.dotnet/
+
 # User shell/history files
 .bash_history
 .bashrc

@@ -9,4 +9,4 @@
 [http]
 	postBuffer = 157286400
 [credential]
-	helper = "!f() { /root/.vscode-server/bin/072586267e68ece9a47aa43f8c108e0dcbf44622/node /tmp/vscode-remote-containers-4744a07e-5207-43a5-b995-ada88b31e3aa.js git-credential-helper $*; }; f"
+	helper = "!f() { /root/.vscode-server/bin/072586267e68ece9a47aa43f8c108e0dcbf44622/node /tmp/vscode-remote-containers-ecfa579f-5426-4fcf-b277-eebb56b07559.js git-credential-helper $*; }; f"

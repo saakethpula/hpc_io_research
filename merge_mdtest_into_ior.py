@@ -55,7 +55,6 @@ META_MAP = {
     "225": "meta_stat_only_8proc",
     "322": "meta_unique_8proc_creates",
     "50":  "meta_shared_8proc_rw",
-    "41":  "meta_highcount_4proc_unique",  # no IOR label 41 today; kept for completeness
 
     # 16‑proc, mostly shared / mixed
     "48":  "meta_shared_8proc_creates",
