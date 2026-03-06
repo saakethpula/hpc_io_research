@@ -18,15 +18,15 @@ You can override these either by editing the constants at the top of the scripts
 
 ### Contents
 
-- `cluster_top25_exemplars_with_darshan.csv` — 25 “exemplar” rows extracted from production Darshan logs; this defines the schema and target counters for each label.
-- `validate_all_labels.py` — runs IOR workloads for all 25 labels, compares Darshan counters to the exemplar rows, prints a summary, and writes `ior_generated_traces.csv`.
-- `validate_all_labels_with_mdtest.py` — runs a set of mdtest metadata workloads plus the same 25 IOR labels, writing all traces into `mdtest_generated_traces.csv` (IOR + mdtest rows in a shared schema).
+- `data/cluster_top25_exemplars_with_darshan.csv` — 25 “exemplar” rows extracted from production Darshan logs; this defines the schema and target counters for each label.
+- `validate_all_labels.py` — runs IOR workloads for all 25 labels, compares Darshan counters to the exemplar rows, prints a summary, and writes `data/ior_generated_traces.csv` (by default).
+- `validate_all_labels_with_mdtest.py` — runs a set of mdtest metadata workloads plus the same 25 IOR labels, writing all traces into `data/mdtest_generated_traces.csv` (IOR + mdtest rows in a shared schema).
 - `parse_darshan_results.py` — helper to parse arbitrary Darshan logs with PyDarshan and align them to the exemplar schema (used separately from the validation scripts).
 - `merge_mdtest_into_ior.py` — merges selected mdtest counters into the IOR rows to produce a single CSV with both data‑path and metadata‑path information (`ior_plus_mdtest_25rows.csv`).
-- `ior_generated_traces.csv` — Darshan counters for the 25 IOR labels only (output of `validate_all_labels.py`).
-- `mdtest_generated_traces.csv` — combined IOR + mdtest trace rows (output of `validate_mdtest_labels.py`).
-- `ior_only_25rows.csv` — 25‑row “clean” IOR dataset aligned to the exemplar schema (no mdtest augmentation).
-- `ior_plus_mdtest_25rows.csv` — 25‑row dataset where selected IOR labels have mdtest metadata counters merged into them.
+- `data/ior_generated_traces.csv` — Darshan counters for the 25 IOR labels only (output of `validate_all_labels.py`).
+- `data/mdtest_generated_traces.csv` — combined IOR + mdtest trace rows (output of `validate_mdtest_labels.py`).
+- `data/ior_only_25rows.csv` — 25‑row “clean” IOR dataset aligned to the exemplar schema (no mdtest augmentation).
+- `data/ior_plus_mdtest_25rows.csv` — 25‑row dataset where selected IOR labels have mdtest metadata counters merged into them.
 
 ---
 
@@ -46,26 +46,22 @@ You must also have:
 
 ### Example: validate all 25 IOR labels
 
-This runs all 25 labels from the exemplar CSV, prints a per‑metric ratio table for each label, and writes a derived CSV of the generated traces:
+This runs all 25 labels from the exemplar CSV, prints a per‑metric ratio table for each label, and writes a derived CSV of the generated traces under `data/`:
 
 ```bash
-python3 validate_all_labels.py \
-  --csv cluster_top25_exemplars_with_darshan.csv \
-  --output-csv ior_generated_traces.csv
+python3 validate_all_labels.py
 ```
 
 To run only a subset of labels:
 
 ```bash
-python3 validate_all_labels.py \
-  --csv cluster_top25_exemplars_with_darshan.csv \
-  --labels 74,28,252
+python3 validate_all_labels.py --labels 74,28,252
 ```
 
 For a quick “what would you run?” pass that does not actually execute IOR, use:
 
 ```bash
-python3 validate_all_labels.py --csv cluster_top25_exemplars_with_darshan.csv --dry-run
+python3 validate_all_labels.py --dry-run
 ```
 
 ---
@@ -74,26 +70,23 @@ python3 validate_all_labels.py --csv cluster_top25_exemplars_with_darshan.csv --
 
 `validate_mdtest_labels.py` runs the same 25 IOR labels plus a collection of `meta_*` mdtest workloads that exercise metadata‑heavy patterns (opens, stats, fsyncs, etc.). Both kinds of labels are written into a shared output CSV.
 
-Run all labels:
+Run all labels (IOR + mdtest) to populate `data/mdtest_generated_traces.csv`:
 
 ```bash
-python3 validate_mdtest_labels.py \
-  --csv cluster_top25_exemplars_with_darshan.csv \
-  --output-csv mdtest_generated_traces.csv
+python3 validate_all_labels_with_mdtest.py
 ```
 
 Run a selected subset (mixing numeric IOR labels and `meta_` labels):
 
 ```bash
-python3 validate_mdtest_labels.py \
-  --csv cluster_top25_exemplars_with_darshan.csv \
+python3 validate_all_labels_with_mdtest.py \
   --labels 74,28,meta_flat_1proc_creates,meta_unique_4proc_large_files
 ```
 
 As with the IOR‑only script, you can use `--dry-run` to see the exact `mpirun` commands without launching them:
 
 ```bash
-python3 validate_mdtest_labels.py --dry-run
+python3 validate_all_labels_with_mdtest.py --dry-run
 ```
 
 On a non‑Darshan system this is a useful way to review or tweak the command lines without needing the full instrumentation stack.
@@ -102,19 +95,19 @@ On a non‑Darshan system this is a useful way to review or tweak the command li
 
 ### Example: merge mdtest counters into IOR rows
 
-Once you have generated `mdtest_generated_traces.csv` with the joint validator, you can create a compact 25‑row CSV that augments each IOR label with a selected mdtest metadata pattern:
+Once you have generated `data/mdtest_generated_traces.csv` with the joint validator, you can create a compact 25‑row CSV that augments each IOR label with a selected mdtest metadata pattern:
 
 ```bash
 python3 merge_mdtest_into_ior.py
 ```
 
 This:
-- Reads `mdtest_generated_traces.csv`
+- Reads `data/mdtest_generated_traces.csv`
 - Uses `META_MAP` in `merge_mdtest_into_ior.py` to choose which `meta_*` label (if any) should be merged into each numeric IOR label
 - Copies a small set of metadata counters (`POSIX_OPENS`, `POSIX_STATS`, `POSIX_FSYNCS`, `POSIX_BYTES_*`, `POSIX_*READS`/`WRITES`) from the mdtest row into the IOR row
-- Writes the result to `ior_plus_mdtest_25rows.csv`
+- Writes the result to `data/ior_plus_mdtest_25rows.csv`
 
-If you just want the original IOR traces, you can instead use `ior_only_25rows.csv` (no mdtest augmentation).
+If you just want the original IOR traces, you can instead use `data/ior_only_25rows.csv` (no mdtest augmentation).
 
 ---
 

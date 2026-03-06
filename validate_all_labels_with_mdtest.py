@@ -23,7 +23,8 @@ from parse_darshan_results import parse_darshan_file
 
 DARSHAN_LIB = "/opt/darshan-install/lib/libdarshan.so"
 LOG_BASE    = "/darshan-logs"
-CSV_PATH    = "/root/cluster_top25_exemplars_with_darshan.csv"
+# Default exemplar CSV now lives under a local data/ directory next to this script.
+CSV_PATH    = os.path.join(SCRIPT_DIR, "data", "cluster_top25_exemplars_with_darshan.csv")
 TMP         = "/tmp"
 B  = f"mpirun --allow-run-as-root -x LD_PRELOAD={DARSHAN_LIB}"
 O  = f"mpirun --allow-run-as-root --oversubscribe -x LD_PRELOAD={DARSHAN_LIB}"
@@ -730,7 +731,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv",        default=CSV_PATH)
     parser.add_argument("--logdir",     default=None)
-    parser.add_argument("--output-csv", default="mdtest_generated_traces.csv")
+    parser.add_argument(
+        "--output-csv",
+        default=os.path.join(SCRIPT_DIR, "data", "mdtest_generated_traces.csv"),
+    )
     parser.add_argument("--dry-run",    action="store_true")
     parser.add_argument("--labels",     default=None,
                         help="Comma-separated subset of labels, e.g. --labels 74,28,meta_flat_1proc_creates")
@@ -878,7 +882,9 @@ def main():
 
     if csv_rows and not args.dry_run:
         out_schema = schema + ["ior_command"]
-        with open(args.output_csv, "w", newline="") as f:
+    out_dir = os.path.dirname(args.output_csv) or "."
+    os.makedirs(out_dir, exist_ok=True)
+    with open(args.output_csv, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=out_schema)
             writer.writeheader()
             writer.writerows(csv_rows)

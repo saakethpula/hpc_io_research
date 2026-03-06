@@ -6,12 +6,14 @@ Merge selected mdtest metadata counters into the IOR rows so that each
 exemplar label has a single row with both data-path and metadata-path
 information.
 
-Inputs (expected in /root):
-  - mdtest_generated_traces.csv  (output of validate_mdtest_labels.py)
+Inputs (by default, under ./data):
+  - data/mdtest_generated_traces.csv  (output of validate_mdtest_labels.py)
 
-Output:
-  - ior_plus_mdtest_25rows.csv  (24 synthetic rows today: all numeric labels)
+Output (also under ./data):
+  - data/ior_plus_mdtest_25rows.csv  (24 synthetic rows today: all numeric labels)
 """
+
+import os
 
 import pandas as pd
 
@@ -72,8 +74,9 @@ META_MAP = {
 
 
 def main() -> None:
-    src = "mdtest_generated_traces.csv"
-    dst = "ior_plus_mdtest_25rows.csv"
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    src = os.path.join(base, "mdtest_generated_traces.csv")
+    dst = os.path.join(base, "ior_plus_mdtest_25rows.csv")
 
     df = pd.read_csv(src, dtype={"label": str})
 
@@ -99,6 +102,7 @@ def main() -> None:
         rows.append(out)
 
     merged = pd.DataFrame(rows).reset_index()  # label back as a column
+    os.makedirs(os.path.dirname(dst) or ".", exist_ok=True)
     merged.to_csv(dst, index=False)
     print(f"Wrote {dst} with {len(merged)} rows.")
 
