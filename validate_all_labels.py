@@ -12,6 +12,7 @@ from datetime import datetime
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 from parse_darshan_results import parse_darshan_file
+from feature_derivation import recompute_pct_features
 
 DARSHAN_LIB = "/opt/darshan-install/lib/libdarshan.so"
 LOG_BASE    = "/darshan-logs"
@@ -448,7 +449,7 @@ def fmt_ratio(ratio):
     return f"{color}{ratio:.3f}x {mark}{RESET}"
 
 def build_csv_row(label, tgt_row, trace_path, schema, ior_cmd=""):
-    row = dict(tgt_row)
+    row = {}
     row["label"]       = label
     row["filename"]    = os.path.basename(trace_path) if trace_path else ""
     row["ior_command"] = ior_cmd
@@ -456,6 +457,7 @@ def build_csv_row(label, tgt_row, trace_path, schema, ior_cmd=""):
         for col, val in get_counters(trace_path).items():
             if col in schema:
                 row[col] = val
+    row = recompute_pct_features(row)
     return {col: row.get(col, "") for col in schema + ["ior_command"]}
 
 # ─── MAIN ────────────────────────────────────────────────────────────────────
@@ -572,9 +574,9 @@ def main():
 
     if csv_rows and not args.dry_run:
         out_schema = schema + ["ior_command"]
-    out_dir = os.path.dirname(args.output_csv) or "."
-    os.makedirs(out_dir, exist_ok=True)
-    with open(args.output_csv, "w", newline="") as f:
+        out_dir = os.path.dirname(args.output_csv) or "."
+        os.makedirs(out_dir, exist_ok=True)
+        with open(args.output_csv, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=out_schema)
             writer.writeheader()
             writer.writerows(csv_rows)

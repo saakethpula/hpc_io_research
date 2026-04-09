@@ -16,6 +16,7 @@ Output (also under ./data):
 import os
 
 import pandas as pd
+from feature_derivation import recompute_pct_features
 
 
 META_COLS = [
@@ -98,7 +99,7 @@ def main() -> None:
                     if col in meta.columns:
                         out[col] = mrow.get(col, out.get(col, 0))
 
-        rows.append(out)
+        rows.append(recompute_pct_features(out))
 
     merged = pd.DataFrame(rows).reset_index()  # label back as a column
     os.makedirs(os.path.dirname(dst) or ".", exist_ok=True)

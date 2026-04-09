@@ -20,6 +20,7 @@ from datetime import datetime
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 from parse_darshan_results import parse_darshan_file
+from feature_derivation import recompute_pct_features
 
 DARSHAN_LIB = "/opt/darshan-install/lib/libdarshan.so"
 LOG_BASE    = "/darshan-logs"
@@ -698,7 +699,7 @@ def build_csv_row(label, tgt_row, trace_paths, csv_step_idx, schema, run_cmd,
     For mdtest labels (capture_map is a dict), each counter may come from a
     different step's trace file (per-counter step overrides).
     """
-    row = dict(tgt_row)
+    row = {}
     row["label"]       = label
     row["filename"]    = os.path.basename(trace_paths[csv_step_idx]) \
                          if trace_paths and trace_paths[csv_step_idx] else ""
@@ -722,6 +723,8 @@ def build_csv_row(label, tgt_row, trace_paths, csv_step_idx, schema, run_cmd,
             tp = trace_paths[step_idx] if trace_paths else None
             if tp and col in schema:
                 row[col] = nan_safe(_ctrs(tp).get(col, 0))
+
+    row = recompute_pct_features(row)
 
     return {col: row.get(col, "") for col in schema + ["ior_command"]}
 
@@ -882,9 +885,9 @@ def main():
 
     if csv_rows and not args.dry_run:
         out_schema = schema + ["ior_command"]
-    out_dir = os.path.dirname(args.output_csv) or "."
-    os.makedirs(out_dir, exist_ok=True)
-    with open(args.output_csv, "w", newline="") as f:
+        out_dir = os.path.dirname(args.output_csv) or "."
+        os.makedirs(out_dir, exist_ok=True)
+        with open(args.output_csv, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=out_schema)
             writer.writeheader()
             writer.writerows(csv_rows)

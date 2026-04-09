@@ -24,6 +24,7 @@ import os
 import sys
 
 import pandas as pd
+from feature_derivation import recompute_pct_features
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -99,6 +100,7 @@ def main():
     # ── Load data ────────────────────────────────────────────────────────
     orig = pd.read_csv(args.original)
     synth = pd.read_csv(args.synthesized)
+    synth = synth.apply(lambda r: pd.Series(recompute_pct_features(r.to_dict())), axis=1)
 
     # Normalise to a common "label" column (some CSVs call it "index").
     for df, name in [(orig, "original"), (synth, "synthesized")]:
